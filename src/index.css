@@ -1,0 +1,66 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@400;500;700;900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Unbounded", ui-sans-serif, system-ui, sans-serif;
+
+  --color-neon-cyan: #22d3ee;
+  --color-neon-magenta: #d946ef;
+  --color-brutal-black: #050505;
+  --color-paper: #f2f2f2;
+}
+
+@layer base {
+  @media (pointer: fine) {
+    html {
+      cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 1 L 17 7 L 10 10 L 7 17 Z' fill='black' stroke='white' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 1 1, auto !important;
+    }
+    .dark html {
+      cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 1 L 17 7 L 10 10 L 7 17 Z' fill='white' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 1 1, auto !important;
+    }
+
+    a, button, [role="button"], input, select, textarea, .cursor-pointer,
+    p, h1, h2, h3, h4, h5, h6, span, li, label {
+      cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 1 L 17 7 L 10 10 L 7 17 Z' fill='%2306b6d4' stroke='white' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 1 1, pointer !important;
+    }
+
+    .dark a, .dark button, .dark [role="button"], .dark input, .dark select, .dark textarea, .dark .cursor-pointer,
+    .dark p, .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6, .dark span, .dark li, .dark label {
+      cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1 1 L 17 7 L 10 10 L 7 17 Z' fill='%2322d3ee' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") 1 1, pointer !important;
+    }
+  }
+
+  body {
+    @apply bg-paper text-brutal-black transition-colors duration-700 ease-in-out selection:bg-brutal-black selection:text-paper;
+  }
+  .dark body {
+    @apply bg-brutal-black text-white selection:bg-neon-cyan selection:text-brutal-black;
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Sophisticated Typography Smoothing */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
