@@ -135,7 +135,7 @@ export const cases: CaseItem[] = [
     visualStyleRu: "Светлая AI/B2B-система: голубой hero, смартфон с чат-интерфейсом, мягкие карточки, message bubbles, схемы внедрения и чистая подача без тяжелого sci-fi.",
     visualStyleEn: "Light AI/B2B system: blue hero, smartphone chat interface, soft cards, message bubbles, implementation diagrams and clean presentation without heavy sci-fi clichés.",
     imageSrc: "/cases/hermes-ai.webp",
-    visualImages: ["/cases/hermes-ai-v1.webp"],
+    visualImages: [],
     websiteLink: "https://hermesai.one/",
     sections: {
       tasksRu: "Задача была упаковать услугу внедрения ИИ так, чтобы бизнес быстро понимал не только модное слово «нейросеть», а практическую пользу: обработка заявок, ответы клиентам, связь с CRM, интеграция с соцсетями и поддержка автоворонок. Сайт должен был быть технологичным, но не холодным и не перегруженным.",
@@ -163,7 +163,7 @@ export const cases: CaseItem[] = [
     visualStyleRu: "Черная спортивная база, белая крупная типографика, красные акценты, монохромные фотографии команды и дерзкая premium-sport подача.",
     visualStyleEn: "Black sports foundation, large white typography, red accents, monochrome team photography and bold premium-sport presentation.",
     imageSrc: "/cases/kaifuy-team.webp",
-    visualImages: ["/cases/kaifuy-team-v1.webp", "/cases/kaifuy-team-v2.webp"],
+    visualImages: [],
     websiteLink: "https://kaifuiteam.ru/",
     sections: {
       tasksRu: "Задача была собрать сайт, который передает не только информацию о команде, а ее характер: спорт, движение, уверенность, командную энергию и ощущение живого сообщества. Важно было уйти от стандартного сайта секции и сделать страницу с яркой идентичностью.",
@@ -191,7 +191,7 @@ export const cases: CaseItem[] = [
     visualStyleRu: "Чистая бело-зеленая корпоративная система: архитектурный hero, спокойная типографика, блоки доверия, партнеры, аккредитации и карточки направлений оценки с 3D-графикой.",
     visualStyleEn: "Clean white-and-green corporate system: architectural hero, calm typography, trust blocks, partners, accreditations and valuation-service cards with 3D visuals.",
     imageSrc: "/cases/stremlenie.webp",
-    visualImages: ["/cases/stremlenie-v1.webp"],
+    visualImages: [],
     websiteLink: "http://stocf.nichost.ru/",
     sections: {
       tasksRu: "Задача была собрать сайт для экспертной B2B-компании так, чтобы пользователь быстро понимал масштаб, надежность и направления работы. Важно было не перегрузить страницу канцелярией, но показать доверие: опыт, аккредитации, количество проектов, рейтинги и понятную структуру услуг.",
@@ -221,7 +221,7 @@ export const cases: CaseItem[] = [
     visualStyleRu: "Темная safety-среда: черная база, красные alert-акценты, зеленые system-status детали, карта района, monitoring-мотивы и controlled tension.",
     visualStyleEn: "Dark safety environment: black base, red alert accents, green system-status details, neighborhood map, monitoring motifs and controlled tension.",
     imageSrc: "/cases/livesec.webp",
-    visualImages: ["/cases/livesec-v1.webp", "/cases/livesec-v2.webp"],
+    visualImages: ["/cases/livesec-v1.webp"],
     sections: {
       tasksRu: "Задача была собрать performance-воронку, где сильный интерес к локальной безопасности не обрывается после первого клика. Лендинг должен был поддержать ожидание, быстро объяснить продукт, добавить доверие и перевести пользователя к понятному post-click шагу.",
       tasksEn: "The task was to build a performance funnel where strong interest in local safety does not break after the first click. The landing page needed to support the expectation, explain the product quickly, build trust and move the user toward a clear post-click step.",
@@ -403,3 +403,7 @@ export const draftCases: CaseItem[] = [
     }
   }
 ];
+
+// Lead with the most visual work; live website projects close the gallery.
+const galleryOrder = ["gaming-promo-funnel", "project-americas", "quack", "livesec", "signal-room", "auvorax", "hermes-ai", "kaifuy-padel", "stremlenie"];
+cases.sort((a, b) => galleryOrder.indexOf(a.id) - galleryOrder.indexOf(b.id));

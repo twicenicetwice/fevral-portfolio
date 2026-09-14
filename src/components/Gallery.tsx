@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 import { useLanguage } from "../contexts/LanguageContext";
 import { translations } from "../lib/i18n";
 import SectionHeader from "./SectionHeader";
+import CaseImage from "./CaseImage";
+import ProjectVisuals from "./ProjectVisuals";
 import { cases, CaseItem } from "../lib/cases";
 
 const ProjectModal: React.FC<{
@@ -16,32 +18,19 @@ const ProjectModal: React.FC<{
   const isRu = language === "ru";
   const shouldReduceMotion = useReducedMotion();
 
+  const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    setActiveSection("tasks");
-    
-    if (typeof document !== "undefined") {
-      document.body.style.overflow = "hidden";
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-
+    const dialog = dialogRef.current!;
+    const trigger = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog.showModal();
     return () => {
-      if (typeof document !== "undefined") {
-        document.body.style.overflow = "";
-      }
-      if (typeof window !== "undefined") {
-        window.removeEventListener("keydown", handleKeyDown);
-      }
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      trigger?.focus({ preventScroll: true });
     };
-  }, [onClose, project.id]);
+  }, []);
 
   const sections = [
     { id: "tasks", title: isRu ? "ЗАДАЧИ" : "TASKS", content: isRu ? project.sections.tasksRu : project.sections.tasksEn },
@@ -49,7 +38,7 @@ const ProjectModal: React.FC<{
     { id: "details", title: isRu ? "ДЕТАЛИ" : "DETAILS", content: isRu ? project.sections.detailsRu : project.sections.detailsEn },
   ];
 
-  if ((isRu && project.sections.visualRu) || (!isRu && project.sections.visualEn)) {
+  if (project.visualImages?.length && ((isRu && project.sections.visualRu) || (!isRu && project.sections.visualEn))) {
     sections.push({ id: "visual", title: isRu ? "ВИЗУАЛ" : "VISUAL", content: isRu ? project.sections.visualRu : project.sections.visualEn });
   }
 
@@ -65,21 +54,14 @@ const ProjectModal: React.FC<{
     exit: { opacity: 0, y: shouldReduceMotion ? 0 : 16, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }
   };
 
-  const heroImageVariants = {
-    hidden: { scale: shouldReduceMotion ? 1 : 1.03 },
-    visible: { scale: 1, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } }
-  };
-  
   const contentFadeVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0.6, delay: 0.2 } }
   };
 
   return createPortal(
-    <div 
-      className="fixed inset-0 flex items-center justify-center p-0 sm:p-6 md:p-8"
-      style={{ zIndex: 2147483647, isolation: "isolate" }}
-    >
+    <dialog ref={dialogRef} className="project-dialog p-0 sm:p-6 md:p-8" aria-labelledby={`modal-title-${project.id}`} onCancel={event => { event.preventDefault(); onClose(); }}>
+    <div className="relative flex h-full w-full items-center justify-center">
       <motion.div
         variants={overlayVariants}
         initial="hidden"
@@ -90,9 +72,6 @@ const ProjectModal: React.FC<{
       />
 
       <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`modal-title-${project.id}`}
         variants={modalVariants}
         initial="hidden"
         animate="visible"
@@ -113,7 +92,8 @@ const ProjectModal: React.FC<{
           <button
             onClick={onClose}
             className="flex-shrink-0 ml-4 p-2 md:p-2.5 bg-black/5 dark:bg-white/5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors group outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"
-            aria-label="Close modal"
+            autoFocus
+            aria-label={isRu ? "Закрыть проект" : "Close project"}
           >
              <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform group-hover:scale-110" style={{ color: "currentColor" }} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -126,13 +106,10 @@ const ProjectModal: React.FC<{
             
             <div className="w-full aspect-[16/9] sm:aspect-[21/9] lg:aspect-[16/7] rounded-[16px] md:rounded-[24px] overflow-hidden mb-10 md:mb-16 relative bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 flex-shrink-0">
                {project.imageSrc ? (
-                 <motion.img 
-                   variants={heroImageVariants}
-                   initial="hidden"
-                   animate="visible"
+                 <CaseImage 
                    src={project.imageSrc} 
                    alt={isRu ? project.titleRu : project.titleEn} 
-                   className="w-full h-full object-cover" 
+                   className="w-full h-full object-cover object-top" loading="eager" 
                  />
                ) : (
                  <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
@@ -167,7 +144,7 @@ const ProjectModal: React.FC<{
                           href={project.websiteLink} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow" 
+                          className="inline-flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl text-sm font-bold uppercase tracking-wider transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 shadow-lg" 
                           style={{ backgroundColor: project.accentColor, color: '#000000' }}
                         >
                           {isRu ? "Посетить сайт" : "Visit Website"}
@@ -206,6 +183,8 @@ const ProjectModal: React.FC<{
                     >
                       <button
                         className="w-full text-left py-5 sm:py-6 md:py-8 group outline-none flex justify-between items-center gap-4 min-w-0"
+                        aria-expanded={isActive}
+                        aria-controls={`section-${project.id}-${section.id}`}
                         onClick={() => setActiveSection(isActive ? null : section.id)}
                       >
                         <h2 
@@ -232,6 +211,7 @@ const ProjectModal: React.FC<{
                       <AnimatePresence initial={false}>
                         {isActive && (
                           <motion.div
+                            id={`section-${project.id}-${section.id}`}
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -243,19 +223,7 @@ const ProjectModal: React.FC<{
                                   <p className="text-sm md:text-base lg:text-lg font-sans font-medium opacity-80 leading-relaxed whitespace-pre-wrap max-w-3xl">
                                     {section.content}
                                   </p>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {project.visualImages.map((imgSrc, idx) => (
-                                      <a key={idx} href={`${imgSrc}?t=${Date.now()}`} target="_blank" rel="noopener noreferrer" className="group relative bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[16px] overflow-hidden aspect-[16/10] flex items-center justify-center transition-all hover:border-black/20 dark:hover:border-white/20 hover:shadow-lg">
-                                        <img src={`${imgSrc}?t=${Date.now()}`} alt={`Visual Mockup ${idx + 1}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center backdrop-blur-[2px]">
-                                            <div className="px-4 py-2 bg-white/10 dark:bg-black/20 border border-white/20 rounded-full text-white text-xs font-bold uppercase tracking-widest backdrop-blur-md flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                                              {isRu ? "Открыть оригинал" : "Open Original"}
-                                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                            </div>
-                                        </div>
-                                      </a>
-                                    ))}
-                                  </div>
+                                  <ProjectVisuals images={project.visualImages} title={isRu ? project.titleRu : project.titleEn} isRu={isRu} />
                                 </div>
                               ) : (
                                 <div className="max-w-3xl">
@@ -276,7 +244,8 @@ const ProjectModal: React.FC<{
           </div>
         </div>
       </motion.div>
-    </div>,
+    </div>
+    </dialog>,
     document.body
   );
 };
@@ -287,6 +256,7 @@ export default function Gallery() {
   const tSection = translations[language].sections.cases;
   const [selectedProject, setSelectedProject] = useState<CaseItem | null>(null);
   const shouldReduceMotion = useReducedMotion();
+  const closeProject = useCallback(() => setSelectedProject(null), []);
 
   const containerVariants = {
     hidden: {},
@@ -367,19 +337,20 @@ export default function Gallery() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12"
         >
           {cases.map((project, index) => (
-             <motion.div
+             <motion.article
                key={project.id}
                variants={itemVariants}
-               onClick={() => setSelectedProject(project)}
-               className="group cursor-pointer relative rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-col aspect-[4/5] sm:aspect-[4/3] md:aspect-[3/4] lg:aspect-[4/5] min-h-[420px] transition-all duration-700 w-full min-w-0 bg-[#050505]"
+               className="case-card group cursor-pointer relative rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-col aspect-[4/5] sm:aspect-[4/3] md:aspect-[3/4] lg:aspect-[4/5] min-h-[420px] transition-all duration-700 w-full min-w-0 bg-[#050505]"
              >
+                <button type="button" className="absolute inset-0 z-30 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-400" aria-haspopup="dialog" aria-label={isRu ? `Открыть проект ${project.titleRu}` : `Open project ${project.titleEn}`} onClick={() => setSelectedProject(project)} />
+                {project.websiteLink && <a href={project.websiteLink} target="_blank" rel="noopener noreferrer" className="absolute left-5 right-5 top-5 z-40 flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4" style={{ backgroundColor: project.accentColor, color: '#050505' }} aria-label={isRu ? `Открыть сайт ${project.titleRu}` : `Visit ${project.titleEn} website`}>{isRu ? "Открыть сайт" : "Visit website"}<span aria-hidden="true">↗</span></a>}
                 <div className="absolute inset-0 w-full h-full overflow-hidden z-0">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/95 via-[#050505]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-10 pointer-events-none" />
-                  <div className="absolute inset-0 bg-[#050505] opacity-60 md:opacity-80 group-hover:opacity-0 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/95 via-[#050505]/60 to-transparent opacity-100 group-hover:opacity-100 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-[#050505] opacity-20 md:opacity-35 group-hover:opacity-0 transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-10 pointer-events-none" />
                   
                   {project.imageSrc ? (
                     <motion.div variants={imageVariants} className="w-full h-full">
-                      <img 
+                      <CaseImage 
                         src={project.imageSrc} 
                         alt={isRu ? project.titleRu : project.titleEn} 
                         className="w-full h-full object-cover transform scale-100 group-hover:scale-[1.04] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" 
@@ -418,7 +389,7 @@ export default function Gallery() {
                     </h3>
                     
                     <div className="overflow-hidden w-full max-w-[95%]">
-                      <div className="flex flex-col items-center transform translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                      <div className="flex flex-col items-center transform translate-y-0 opacity-100 transition-all duration-500 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)]">
                         <p className="font-sans text-xs md:text-[13px] opacity-80 font-medium leading-relaxed line-clamp-2 w-full mb-5 lg:mb-6">
                           {isRu ? project.previewRu : project.previewEn}
                         </p>
@@ -435,7 +406,7 @@ export default function Gallery() {
                     </div>
                   </div>
                 </motion.div>
-              </motion.div>
+              </motion.article>
           ))}
         </motion.div>
       </div>
@@ -446,7 +417,7 @@ export default function Gallery() {
             key={selectedProject.id}
             project={selectedProject}
             language={language}
-            onClose={() => setSelectedProject(null)}
+            onClose={closeProject}
           />
         )}
       </AnimatePresence>
