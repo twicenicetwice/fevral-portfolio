@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { useReducedMotion } from "motion/react";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import Header from "./components/Header";
@@ -44,10 +44,10 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 }
 
 export default function App() {
-  const { scrollYProgress } = useScroll();
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
+    if (shouldReduceMotion) return;
     const lenis = new Lenis({
       duration: 1.5,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -55,16 +55,17 @@ export default function App() {
       smoothWheel: true,
     });
 
+    let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     }
-    const rafId = requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
     const handleHashClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const anchor = target.closest("a");
-      if (anchor && anchor.hash && anchor.hash.startsWith("#")) {
+      if (anchor && anchor.origin === location.origin && anchor.pathname === location.pathname && anchor.hash.length > 1 && document.getElementById(decodeURIComponent(anchor.hash.slice(1)))) {
         e.preventDefault();
         lenis.scrollTo(anchor.hash, { offset: -100 });
       }
@@ -77,7 +78,7 @@ export default function App() {
       document.removeEventListener("click", handleHashClick);
       lenis.destroy();
     };
-  }, []);
+  }, [shouldReduceMotion]);
 
   return (
     <div className="min-h-screen bg-paper dark:bg-brutal-black text-brutal-black dark:text-paper selection:bg-brutal-black dark:selection:bg-neon-cyan selection:text-paper dark:selection:text-brutal-black font-sans relative transition-colors duration-700 ease-in-out">
